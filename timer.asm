@@ -13,6 +13,8 @@ syscall		#Get time
 move $s0, $a0	#$s0 = Previous system time
 li $s1, 1	#$s1 = Current state
 
+li $s3, 1000	#$s3 = Time between states in ms ----------(THIS IS A CONSTANT!)------------
+
 #State list:
 #1: Green
 #2: Yellow
@@ -28,8 +30,7 @@ syscall		#Get current time
 
 sub $s2, $a0, $s0	#$s2 = The time difference
 
-li $t1, 10
-blt $s2, $t1, ContinueLooping	#If a second or more has passed, execute following code
+blt $s2, $s3, ContinueLooping	#If time passed exceeds $s3 then execute following code
 addi $s1, $s1, 1	#Change to next light state
 li $t0, 4		#Total # of states
 ble $s1, $t0, LightHasValidState	#If the light state > max number of states, execute following code
@@ -45,6 +46,7 @@ j L1
 
 
 #Can rework this! Don't need remainders, just check direct values
+#May even be possible with a while loop
 PrintCurrState:
 li $v0, 4	#Print string syscall
 li $t0, 4
