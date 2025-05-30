@@ -45,33 +45,30 @@ j L1
 
 
 
-#Can rework this! Don't need remainders, just check direct values
+#Can be made more efficient by checking state 3/4 together
 #May even be possible with a while loop
 PrintCurrState:
-li $v0, 4	#Print string syscall
+li $v0, 4	#Print string syscall code
 li $t0, 4
-rem $t1, $a0, $t0			#Is current state divisible by 4?
-beq $t1, $zero, StateDivisibleBy3or4	#If so: Branch to exit
+beq $a0, $t0, State3or4	#If so: Branch to exit
 
 li $t0, 3
-rem $t1, $a0, $t0			#Is current state divisible by 3?
-beq $t1, $zero, StateDivisibleBy3or4	#If so: branch to print
+beq $a0, $t0, State3or4	#If so: branch to print
 
 li $t0, 2
-rem $t1, $a0, $t0			#Is current state divisible by 2?
-beq $t1, $zero, StateDivisibleBy2	#If so: branch to print
+beq $a0, $t0, State2	#If so: branch to print
 
 #Otherwise, assume its at state 1
 la $a0, green	#Load green string
 j PrintCurrStateReturn
 
-StateDivisibleBy2:
+State2:
 la $a0, yellow 	#Load yellow string
 j PrintCurrStateReturn
 
-StateDivisibleBy3or4:
+State3or4:
 la $a0, red	#Load red string
 
 PrintCurrStateReturn:
 syscall		#Print loaded string
-jr $ra
+jr $ra		#Return
