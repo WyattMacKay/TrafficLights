@@ -44,7 +44,7 @@ ContinueLooping:
 j L1
 
 
-
+#Need to add better comments
 #Can be made more efficient by checking state 3/4 together
 #May even be possible with a while loop
 PrintCurrState:
