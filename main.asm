@@ -140,7 +140,8 @@ print_curr_state:
 li $v0, 4
 la $a0, temp_print_state
 syscall
-addi $a0, $s0, 0
+rem $t0, $s0, 6
+addi $a0, $t0, 0
 li $v0, 1
 syscall
 li $v0, 4
