@@ -30,7 +30,6 @@ li $s1, 0 	#crosswalk state to 0
 li $s2, 60 	#default speed limit
 li $s3, 3000 	#default green light time
 li $s4, 0 	#start time of simulator cycle
-li $s5, 0 	#current time
 
 # ------------ Gather introductory information for the simulator ----------------
 main:
@@ -91,7 +90,8 @@ la $a0, invalid_input
 syscall
 j set_green_time
 
-# -------------- Starting the simulator ------------------
+
+# ----------------------------- Starting the simulator ---------------------------------
 main_simulator:
 #get the time for the start of cycle
 li $v0, 30
@@ -113,7 +113,7 @@ j exit_thresh_set
 
 thresh_set_yellow:
 move $a0, $s2
-jal calculate_yellow_duration
+jal calculate_yellow_duration	#calculating yellow duration twice a light cycle is better than wasting a register
 move $t1, $v0		#set the threshold of yellow light to calculated time
 j exit_thresh_set
 
