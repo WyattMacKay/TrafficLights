@@ -98,32 +98,16 @@ li $v0, 30
 syscall
 move $s4, $a0
 
-rem $t1, $s0, 3 #if $t1 is 0, its a green light timer, if $t1 is 1 its a yellow timer, if $t1 is 2 its an all red timer
+rem $a0, $s0, 3 #if $t1 is 0, its a green light timer, if $t1 is 1 its a yellow timer, if $t1 is 2 its an all red timer
 
 #Find out if the remainder of state / 3 is 0, 1, or 2 then go to the corresponding threshold setting block
-beq $t1, $zero, thresh_set_green
-addi $t1, $t1, -1
-beq $t1, $zero, thresh_set_yellow
-addi $t1, $t1, -1
-beq $t1, $zero, thresh_set_red
+#load params
+move $a1, $s2
+move $a2, $s3
+jal get_state_time
+move $t1, $v0
 
-thresh_set_green:
-add $t1, $s3, $zero #set the threshold to the green light delay then exit the if
-j exit_thresh_set
-
-thresh_set_yellow:
-move $a0, $s2
-jal calculate_yellow_duration	#calculating yellow duration twice a light cycle is better than wasting a register
-move $t1, $v0		#set the threshold of yellow light to calculated time
-j exit_thresh_set
-
-thresh_set_red:
-addi $t1, $zero, 1000 #when lights are all red, wait 1 second to go to next state
-
-exit_thresh_set: #label to skip other threshold setting blocks
-
-jal print_curr_state
-
+jal print_curr_state	#print the light states
 L1:
 	li $v0, 30 #syscall to get current time into $a0
 	syscall
@@ -134,12 +118,28 @@ L1:
 
 addi $s0, $s0, 1 #increment state
 j main_simulator #jump back up to print then loop again
-	
 
-calculate_yellow_duration:	# $a0 = km/hr
-li $t0, 80	#80ms / (km/hr)
-mul $v0, $a0, $t0
+
+get_state_time:	# $a0 = current state		$a1 = speed limit		$a2 = green light time
+beq $a0, $zero, thresh_set_green
+addi $a0, $a0, -1
+beq $a0, $zero, thresh_set_yellow
+addi $a0, $a0, -1	#this check may be uneccessary
+beq $a0, $zero, thresh_set_red
+
+thresh_set_green:
+add $v0, $a2, $zero #set the threshold to the green light delay then exit the if
 jr $ra
+
+thresh_set_yellow:
+li $t0, 80	#80ms / (km/hr)
+mul $v0, $a1, $t0
+jr $ra
+
+thresh_set_red:
+addi $v0, $zero, 1000 #when lights are all red, wait 1 second to go to next state
+jr $ra
+
 
 
 # -------------- Print the current state (TEMPORARY LOGIC) ------------------
