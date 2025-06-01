@@ -120,26 +120,23 @@ addi $s0, $s0, 1 #increment state
 j main_simulator #jump back up to print then loop again
 
 
+#----------------------------------Get State Time Function--------------------------
 get_state_time:	# $a0 = current state		$a1 = speed limit		$a2 = green light time
 beq $a0, $zero, thresh_set_green
 addi $a0, $a0, -1
 beq $a0, $zero, thresh_set_yellow
-addi $a0, $a0, -1	#this check may be uneccessary
-beq $a0, $zero, thresh_set_red
+#else, all must be red
+addi $v0, $zero, 1000 #when lights are all red, wait 1 second to go to next state
+jr $ra
 
 thresh_set_green:
 add $v0, $a2, $zero #set the threshold to the green light delay then exit the if
 jr $ra
 
 thresh_set_yellow:
-li $t0, 80	#80ms / (km/hr)
-mul $v0, $a1, $t0
+li $t0, 80		#80ms / (km/hr)
+mul $v0, $a1, $t0	#multiply km/hr by ms above	
 jr $ra
-
-thresh_set_red:
-addi $v0, $zero, 1000 #when lights are all red, wait 1 second to go to next state
-jr $ra
-
 
 
 # -------------- Print the current state (TEMPORARY LOGIC) ------------------
