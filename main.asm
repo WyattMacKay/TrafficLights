@@ -4,6 +4,7 @@ invalid_input: .asciiz "Invalid input...\n"
 ask_speed_limit: .asciiz "Enter new speed limit: "
 ask_green_time: .asciiz "Enter new green light time: "
 new_line: .asciiz "\n"
+cross: .asciiz "You may cross now.\n"
 
 temp_print_state: .asciiz "Current state is: "
 
@@ -19,17 +20,20 @@ temp_print_state: .asciiz "Current state is: "
 #5. NS lights about to be green, EW lights red
 
 #CROSS WALK STATES (stored in $s1)
-#0. No cross walks are active (can be active during any light state)
-#1. NS cross walk is active (can only be active during light state 1)
-#2. EW cross walk is active (can only be active during light state 4)
+#0. No cross walks have cross requests
+#1. NS cross walk has cross request
+#2. EW cross walk has cross request
+#3. Both cross walks have cross requests
 
 # ------------- Program initialization and defaults ---------------
 init:
 li $s0, 0 	#lights state set to 0
-li $s1, 0 	#crosswalk state to 0
+li $s1, 0 	#crosswalk input state 
 li $s2, 60 	#default speed limit
 li $s3, 3000 	#default green light time
 li $s4, 0 	#start time of simulator cycle
+#$s5 is reserved later
+
 
 # ------------ Gather introductory information for the simulator ----------------
 main:
@@ -105,21 +109,65 @@ rem $a0, $s0, 3 #if $t1 is 0, its a green light timer, if $t1 is 1 its a yellow 
 move $a1, $s2
 move $a2, $s3
 jal get_state_time
-move $t1, $v0
+move $s5, $v0
+
+rem $t2, $s0, 6		#Get which state we are currently in
 
 jal print_curr_state	#print the light states
 L1:
+	jal check_for_input
+	beq $v0, $zero, no_input
+		move $a0, $s1	#pass the current crosswalk input state as a paramater
+		move $a1, $v0	#pass the inputted character as a paramater
+		jal verify_input
+		move $s1, $v0
+		
+		li $v0, 1
+		move $a0, $s1
+		syscall
+	
+	no_input:
 	li $v0, 30 #syscall to get current time into $a0
 	syscall
 	
 	sub $t0, $a0, $s4 #get the difference in time between the start of cycle and now
-	
-	blt $t0, $t1, L1 #if the difference is less than the threshold, loop again
+	blt $t0, $s5, L1 #if the difference is less than the threshold, loop again
 
 addi $s0, $s0, 1 #increment state
 j main_simulator #jump back up to print then loop again
 
+#-----------------------------------Crosswalk Input Check---------------------------
+check_for_input:	#No paramaters! Returns character, or 0
+	li $v0, 0
+	lui $t0, 0xFFFF		#check if there is input
+	lw $t1, 0($t0)
+	and $t1, $t1, 1 
+	beq $t1, $zero, skip
+	#There is input. Return the value
+		lb $v0, 4($t0)	#load character from 0xFFFF0004 (user input location)
+	skip:
+	jr $ra
 
+
+verify_input:	#$a0 = Crosswalk input state	$a1 = character to verify  Returns new crosswalk state
+	li $t0, 101	#e char
+	beq $a1, $t0, EWInput
+	li $t0, 119	#w char
+	beq $a1, $t0, EWInput
+	li $t0, 110	#n char
+	beq $a1, $t0, NSInput
+	li $t0, 115	#s char
+	beq $a1, $t0, NSInput
+	li $v0, 0
+	jr $ra
+	
+	EWInput:
+		ori $v0, $a0, 2		#set the 2nd least significant bit to a 1
+		jr $ra
+	NSInput:
+		ori $v0, $a0, 1		#set the least significant bit to a 1
+		jr $ra
+	
 #----------------------------------Get State Time Function--------------------------
 get_state_time:	# $a0 = current state		$a1 = speed limit		$a2 = green light time
 beq $a0, $zero, thresh_set_green
