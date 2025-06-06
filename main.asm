@@ -158,7 +158,7 @@ verify_input:	#$a0 = Crosswalk input state	$a1 = character to verify  Returns ne
 	beq $a1, $t0, NSInput
 	li $t0, 115	#s char
 	beq $a1, $t0, NSInput
-	li $v0, 0
+	move $v0, $a0	#if not NSEW, return state unchanged
 	jr $ra
 	
 	EWInput:
