@@ -153,23 +153,53 @@ main_simulator:
 	move $a1, $s1		#set argument 1 to current crosswalk input state
 	jal print_curr_state	#print the states
 	move $s1, $v0		#save new crosswalk state from function call
+	
+	move $a0, $s1		#set argument 0 to cross walk state
+	move $a1, $s5		#set argument 1 to cycle time threshold
+	move $a2, $s4		#set argument 2 to the cycle start time
+	jal wait_for_cycle	#wait for the cycle to finish
+	move $s1, $v0		#save new crosswalk state from the function call
+
+	addi $s0, $s0, 1 #increment state
+	j main_simulator #start the next cycle by looping back up to main_simulator (the current block)
+
+
+# --------------------------Wait for a cycle to complete-----------------------------
+#[ARGS]: 	$a0 = current cross walk state
+#		$a1 = cycle time threshold
+#		$a2 = cycle start time
+#[RETURN]: 	Returns updated crosswalk state
+wait_for_cycle:
+	#save return address since this is non leaf
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	
+	#Save the first 2 arguments since this function is non leaf and will need to use $a0 and $a1 later
+	add $t8, $a0, $zero
+	add $t9, $a1, $zero
+
 	L1:
 		jal check_for_input
 		beq $v0, $zero, no_input
-			move $a0, $s1	#pass the current crosswalk input state as a paramater
+			move $a0, $t8	#pass the current crosswalk input state as a paramater
 			move $a1, $v0	#pass the inputted character as a paramater
 			jal verify_input
-			move $s1, $v0
-		
+			move $t8, $v0 	#update the crosswalk state
+	
 		no_input:
 		li $v0, 30 #syscall to get current time into $a0
 		syscall
 	
-		sub $t0, $a0, $s4 #get the difference in time between the start of cycle and now
-		blt $t0, $s5, L1 #if the difference is less than the threshold, loop again
-
-	addi $s0, $s0, 1 #increment state
-	j main_simulator #jump back up to print then loop again
+		sub $t7, $a0, $a2 #get the difference in time between the start of cycle and now
+		blt $t7, $t9, L1 #if the difference is less than the threshold, loop again
+	
+	#Put the updated crosswalk state (if any update) into the return
+	move $v0, $t8
+	
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	
+	jr $ra #return
 
 
 #------------------------------Crosswalk Input Check--------------------------------
