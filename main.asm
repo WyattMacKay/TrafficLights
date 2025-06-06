@@ -1,24 +1,20 @@
 .data
 #General things to print
-welcome_msg: .asciiz "Welcome to the traffic light simulator.\n1. Start simulator\n2. Set custom speed limit\n3. Set green light time\nEnter your selection: "
+welcome_msg: .asciiz "Welcome to the traffic light simulator.\n1. Start simulator\n2. Set custom speed limit\n3. Set green light time\n4. Help\nEnter your selection: "
+help_msg: .asciiz "\n\nBefore beginning, ensure the Mars45 'Keyboard and Display MMIO Simulator' is connected to the program by going to settings -> Keyboard and Display MMIO Simulator.\nUpon starting the traffic light simulator, use the following inputs in the Keyboard and Display MMIO Simulator\nn: Request crossing from the north\ns: Request crossing from the south\ne: Request crossing from the east\nw: Request crossing from the west\nq: Exit the simulator.\nPress enter to go back to the welcome screen:\n\n"
 invalid_input: .asciiz "Invalid input...\n"
 ask_speed_limit: .asciiz "Enter new speed limit: "
 ask_green_time: .asciiz "Enter new green light time: "
 new_line: .asciiz "\n"
 
 #Printing the intersection as ascii art: state_#.CrosswalkActive? *note we re-use state 2 and 5's print statement since its the same (all_red)
-state_0.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      G      x\nE           x    R   R    x          W     \n            x      G      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n"
-state_0.1: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            o      G      o\nE           o    R   R    o          W     \n            o      G      o\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n"
-state_1.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      Y      x\nE           x    R   R    x          W     \n            x      Y      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n"
-state_3.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      R      x\nE           x    G   G    x          W     \n            x      R      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n"
-state_3.1: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |oooooooooooo|\n------------|            |------------\n            x      R      x\nE           x    G   G    x          W     \n            x      R      x\n------------|            |------------\n            |oooooooooooo|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n"
-state_4.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      R      x\nE           x    Y   Y    x          W     \n            x      R      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n"
-state_all_red: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      R      x\nE           x    R   R    x          W     \n            x      R      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n"
-
-#TEMPORARIES
-cross_ew: .asciiz "You may cross EAST/WEST.\n"
-cross_ns: .asciiz "You may cross NORTH/SOUTH.\n"
-temp_print_state: .asciiz "Current state is: "
+state_0.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      G      x\nE           x    R   R    x          W     \n            x      G      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_0.1: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            o      G      o\nE           o    R   R    o          W     \n            o      G      o\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_1.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      Y      x\nE           x    R   R    x          W     \n            x      Y      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_3.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      R      x\nE           x    G   G    x          W     \n            x      R      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_3.1: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |oooooooooooo|\n------------|            |------------\n            x      R      x\nE           x    G   G    x          W     \n            x      R      x\n------------|            |------------\n            |oooooooooooo|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_4.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      R      x\nE           x    Y   Y    x          W     \n            x      R      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_all_red: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      R      x\nE           x    R   R    x          W     \n            x      R      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
 
 .text
 .globl init
@@ -67,6 +63,8 @@ main:
 	beq $t0, $zero, set_speed_limit
 	addi $t0, $t0, -1
 	beq $t0, $zero, set_green_time
+	addi $t0, $t0, -1
+	beq $t0, $zero, display_help
 
 	#Input is invalid, print invalid message then try again
 	li $v0, 4
@@ -96,7 +94,7 @@ set_speed_limit:
 	j set_speed_limit
 
 
-# ---------------------- Setting the custom green light time -----------------------
+# ----------------------Setting the custom green light time-----------------------
 #[ARGS]: 	No arguments
 #[RETURN]: 	No return
 set_green_time:
@@ -115,6 +113,22 @@ set_green_time:
 	la $a0, invalid_input
 	syscall
 	j set_green_time
+
+
+# ---------------------------------Help screen------------------------------------
+#[ARGS]: 	No arguments
+#[RETURN]: 	No return
+display_help:
+	#Display the help message
+	li $v0, 4
+	la $a0, help_msg
+	syscall
+	
+	#Wait for the user to hit enter, no input is actually gathered
+	li $v0, 8
+	syscall
+	
+	j main
 
 
 # -----------------------------Starting the simulator-------------------------------
@@ -186,7 +200,9 @@ verify_input: #Function checks if the latest input is a valid input (E, W, N, or
 	beq $a1, $t0, NSInput
 	li $t0, 115	#s char
 	beq $a1, $t0, NSInput
-	move $v0, $a0	#if not NSEW, return state unchanged
+	li $t0, 113	#q char
+	beq $a1, $t0, exit_program
+	move $v0, $a0	#if not NSEWQ, return state unchanged
 	jr $ra
 	
 	EWInput:
