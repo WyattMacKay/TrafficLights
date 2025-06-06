@@ -4,7 +4,8 @@ invalid_input: .asciiz "Invalid input...\n"
 ask_speed_limit: .asciiz "Enter new speed limit: "
 ask_green_time: .asciiz "Enter new green light time: "
 new_line: .asciiz "\n"
-cross: .asciiz "You may cross now.\n"
+cross_ew: .asciiz "You may cross EAST/WEST.\n"
+cross_ns: .asciiz "You may cross NORTH/SOUTH.\n"
 
 temp_print_state: .asciiz "Current state is: "
 
@@ -111,9 +112,10 @@ move $a2, $s3
 jal get_state_time
 move $s5, $v0
 
-rem $t2, $s0, 6		#Get which state we are currently in
-
-jal print_curr_state	#print the light states
+rem $a0, $s0, 6		#set argument 0 to current light state
+move $a1, $s1		#set argument 1 to current crosswalk input state
+jal print_curr_state	#print the states
+move $s1, $v0		#save new crosswalk state from function call
 L1:
 	jal check_for_input
 	beq $v0, $zero, no_input
@@ -122,9 +124,9 @@ L1:
 		jal verify_input
 		move $s1, $v0
 		
-		li $v0, 1
-		move $a0, $s1
-		syscall
+		#li $v0, 1
+		#move $a0, $s1
+		#syscall
 	
 	no_input:
 	li $v0, 30 #syscall to get current time into $a0
@@ -188,15 +190,51 @@ jr $ra
 
 
 # -------------- Print the current state (TEMPORARY LOGIC) ------------------
-print_curr_state:
-li $v0, 4
-la $a0, temp_print_state
-syscall
-rem $t0, $s0, 6
-addi $a0, $t0, 0
-li $v0, 1
-syscall
-li $v0, 4
-la $a0, new_line
-syscall
-jr $ra
+print_curr_state:		# $a0 = light state 	$a1 = crosswalk input state		Returns new crosswalk state
+	addi $sp, $sp, -4
+	sw $s0, 0($sp)	#stash $s0 so we can use it to hold our argument
+	
+	move $s0, $a0	#set $s0 to the light state argument so we can reuse argument register
+	
+	li $v0, 4
+	la $a0, temp_print_state	#print temporary state preamble
+	syscall
+	
+	move $a0, $s0
+	li $v0, 1			#print current state
+	syscall
+	
+	li $v0, 4
+	la $a0, new_line		#print new line
+	syscall
+	
+	beq $s0, $zero, check_ns_cw	#if current state is NS green state, then go to check NS crosswalk
+	
+	li $t0, 3	#is current state EW green state?
+	beq $s0, $t0, check_ew_cw	#if so, go to check EW crosswalk
+	j exit_print
+	
+	check_ns_cw:
+		andi $t0, $a1, 1
+		beq $t0, $zero, exit_print	#if NS crosswalk input bit is 0, exit
+		#if the NS bit is 1:
+		li $v0, 4
+		la $a0, cross_ns		#print that NS crosswalk active 
+		syscall
+		andi $a1, $a1, 2		#set NS bit to 0
+		j exit_print
+		
+	check_ew_cw:
+		andi $t0, $a1, 2
+		beq $t0, $zero, exit_print	#if EW crosswalk input bit is 0, exit
+		#if the EW bit is 1:
+		li $v0, 4
+		la $a0, cross_ew		#print that EW crosswalk active 
+		syscall
+		andi $a1, $a1, 1		#set EW bit to 0
+	
+	exit_print:
+		move $v0, $a1 	#return (possibly modified) crosswalk input state
+		lw $s0, 0($sp)	#restore $s0
+		addi $sp, $sp, 4
+		jr $ra
