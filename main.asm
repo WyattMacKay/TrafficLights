@@ -143,7 +143,7 @@ main_simulator:
 	#Find out if the remainder of state / 3 is 0, 1, or 2 then go to the corresponding threshold setting block
 	#remainder of 0 means its a green light, 1 means yellow light, 2 means all red
 	#load params
-	rem $a0, $s0, 3
+	remu $a0, $s0, 3
 	move $a1, $s2
 	move $a2, $s3
 	jal get_state_time #call the function which returns the time to wait for the current cycle
