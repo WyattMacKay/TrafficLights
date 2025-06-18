@@ -1,5 +1,11 @@
 .data
+<<<<<<< Updated upstream
 welcome_msg: .asciiz "Welcome to the traffic light simulator.\n1. Start simulator\n2. Set custom speed limit\n3. Set green light time\nEnter your selection: "
+=======
+#General things to print
+welcome_msg: .asciiz "Welcome to the traffic light simulator.\n1. Start simulator\n2. Set custom speed limit\n3. Set green light time\n4. Help\nEnter your selection: "
+help_msg: .asciiz "\n\nBefore beginning, ensure the Mars45 'Keyboard and Display MMIO Simulator' is connected to the program by going to settings -> Keyboard and Display MMIO Simulator.\nUpon starting the traffic light simulator, use the following inputs in the Keyboard and Display MMIO Simulator\nn: Request crossing from the north\ns: Request crossing from the south\ne: Request crossing from the east\nw: Request crossing from the west\nq: Exit the simulator.\nPress enter to go back to the welcome screen:\n\n"
+>>>>>>> Stashed changes
 invalid_input: .asciiz "Invalid input...\n"
 ask_speed_limit: .asciiz "Enter new speed limit: "
 ask_green_time: .asciiz "Enter new green light time: "
