@@ -1,19 +1,20 @@
 .data
-<<<<<<< Updated upstream
-welcome_msg: .asciiz "Welcome to the traffic light simulator.\n1. Start simulator\n2. Set custom speed limit\n3. Set green light time\nEnter your selection: "
-=======
 #General things to print
 welcome_msg: .asciiz "Welcome to the traffic light simulator.\n1. Start simulator\n2. Set custom speed limit\n3. Set green light time\n4. Help\nEnter your selection: "
-help_msg: .asciiz "\n\nBefore beginning, ensure the Mars45 'Keyboard and Display MMIO Simulator' is connected to the program by going to settings -> Keyboard and Display MMIO Simulator.\nUpon starting the traffic light simulator, use the following inputs in the Keyboard and Display MMIO Simulator\nn: Request crossing from the north\ns: Request crossing from the south\ne: Request crossing from the east\nw: Request crossing from the west\nq: Exit the simulator.\nPress enter to go back to the welcome screen:\n\n"
->>>>>>> Stashed changes
+help_msg: .asciiz "\n\nBefore beginning, ensure the Mars45 'Keyboard and Display MMIO Simulator' is connected to the program by going to tools -> Keyboard and Display MMIO Simulator.\nUpon starting the traffic light simulator, use the following inputs in the Keyboard and Display MMIO Simulator\nn: Request crossing from the north\ns: Request crossing from the south\ne: Request crossing from the east\nw: Request crossing from the west\nq: Exit the simulator.\nPress enter to go back to the welcome screen:\n\n"
 invalid_input: .asciiz "Invalid input...\n"
 ask_speed_limit: .asciiz "Enter new speed limit: "
 ask_green_time: .asciiz "Enter new green light time: "
 new_line: .asciiz "\n"
-cross_ew: .asciiz "You may cross EAST/WEST.\n"
-cross_ns: .asciiz "You may cross NORTH/SOUTH.\n"
 
-temp_print_state: .asciiz "Current state is: "
+#Printing the intersection as ascii art: state_#.CrosswalkActive? *note we re-use state 2 and 5's print statement since its the same (all_red)
+state_0.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      G      x\nE           x    R   R    x          W     \n            x      G      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_0.1: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            o      G      o\nE           o    R   R    o          W     \n            o      G      o\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_1.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      Y      x\nE           x    R   R    x          W     \n            x      Y      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_3.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      R      x\nE           x    G   G    x          W     \n            x      R      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_3.1: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |oooooooooooo|\n------------|            |------------\n            x      R      x\nE           x    G   G    x          W     \n            x      R      x\n------------|            |------------\n            |oooooooooooo|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_4.0: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      R      x\nE           x    Y   Y    x          W     \n            x      R      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
+state_all_red: .asciiz "\n            |      N     |\n            |            |\n            |            |\n            |            |\n            |            |\n            |xxxxxxxxxxxx|\n------------|            |------------\n            x      R      x\nE           x    R   R    x          W     \n            x      R      x\n------------|            |------------\n            |xxxxxxxxxxxx|\n            |            |\n            |            |\n            |            |\n            |            |\n            |      S     |\n\n\n"
 
 .text
 .globl init
@@ -62,6 +63,8 @@ main:
 	beq $t0, $zero, set_speed_limit
 	addi $t0, $t0, -1
 	beq $t0, $zero, set_green_time
+	addi $t0, $t0, -1
+	beq $t0, $zero, display_help
 
 	#Input is invalid, print invalid message then try again
 	li $v0, 4
@@ -91,7 +94,7 @@ set_speed_limit:
 	j set_speed_limit
 
 
-# ---------------------- Setting the custom green light time -----------------------
+# ----------------------Setting the custom green light time-----------------------
 #[ARGS]: 	No arguments
 #[RETURN]: 	No return
 set_green_time:
@@ -110,6 +113,22 @@ set_green_time:
 	la $a0, invalid_input
 	syscall
 	j set_green_time
+
+
+# ---------------------------------Help screen------------------------------------
+#[ARGS]: 	No arguments
+#[RETURN]: 	No return
+display_help:
+	#Display the help message
+	li $v0, 4
+	la $a0, help_msg
+	syscall
+	
+	#Wait for the user to hit enter, no input is actually gathered
+	li $v0, 8
+	syscall
+	
+	j main
 
 
 # -----------------------------Starting the simulator-------------------------------
@@ -134,23 +153,53 @@ main_simulator:
 	move $a1, $s1		#set argument 1 to current crosswalk input state
 	jal print_curr_state	#print the states
 	move $s1, $v0		#save new crosswalk state from function call
+	
+	move $a0, $s1		#set argument 0 to cross walk state
+	move $a1, $s5		#set argument 1 to cycle time threshold
+	move $a2, $s4		#set argument 2 to the cycle start time
+	jal wait_for_cycle	#wait for the cycle to finish
+	move $s1, $v0		#save new crosswalk state from the function call
+
+	addi $s0, $s0, 1 #increment state
+	j main_simulator #start the next cycle by looping back up to main_simulator (the current block)
+
+
+# --------------------------Wait for a cycle to complete-----------------------------
+#[ARGS]: 	$a0 = current cross walk state
+#		$a1 = cycle time threshold
+#		$a2 = cycle start time
+#[RETURN]: 	Returns updated crosswalk state
+wait_for_cycle:
+	#save return address since this is non leaf
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	
+	#Save the first 2 arguments since this function is non leaf and will need to use $a0 and $a1 later
+	add $t8, $a0, $zero
+	add $t9, $a1, $zero
+
 	L1:
 		jal check_for_input
 		beq $v0, $zero, no_input
-			move $a0, $s1	#pass the current crosswalk input state as a paramater
+			move $a0, $t8	#pass the current crosswalk input state as a paramater
 			move $a1, $v0	#pass the inputted character as a paramater
 			jal verify_input
-			move $s1, $v0
-		
+			move $t8, $v0 	#update the crosswalk state
+	
 		no_input:
 		li $v0, 30 #syscall to get current time into $a0
 		syscall
 	
-		sub $t0, $a0, $s4 #get the difference in time between the start of cycle and now
-		blt $t0, $s5, L1 #if the difference is less than the threshold, loop again
-
-	addi $s0, $s0, 1 #increment state
-	j main_simulator #jump back up to print then loop again
+		sub $t7, $a0, $a2 #get the difference in time between the start of cycle and now
+		blt $t7, $t9, L1 #if the difference is less than the threshold, loop again
+	
+	#Put the updated crosswalk state (if any update) into the return
+	move $v0, $t8
+	
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	
+	jr $ra #return
 
 
 #------------------------------Crosswalk Input Check--------------------------------
@@ -181,7 +230,9 @@ verify_input: #Function checks if the latest input is a valid input (E, W, N, or
 	beq $a1, $t0, NSInput
 	li $t0, 115	#s char
 	beq $a1, $t0, NSInput
-	move $v0, $a0	#if not NSEW, return state unchanged
+	li $t0, 113	#q char
+	beq $a1, $t0, exit_program
+	move $v0, $a0	#if not NSEWQ, return state unchanged
 	jr $ra
 	
 	EWInput:
@@ -215,55 +266,88 @@ get_state_time:
 		jr $ra
 
 
-# ---------------- Print the current state (TEMPORARY LOGIC) -----------------------
+# ---------------------------Print the current state-------------------------------
 #[ARGS]: 	$a0 = Current state
 #		$a1 = Crosswalk input state
 #[RETURN]: 	Returns new crosswalk state
 print_curr_state:
-	addi $sp, $sp, -4
-	sw $s0, 0($sp)	#stash $s0 so we can use it to hold our argument
+	#Figure out what state we're in
+	beq $a0, $zero, print_state_0
+	addi $a0, $a0, -1
+	beq $a0, $zero, print_state_1
+	addi $a0, $a0, -1
+	beq $a0, $zero, print_state_all_red
+	addi $a0, $a0, -1
+	beq $a0, $zero, print_state_3
+	addi $a0, $a0, -1
+	beq $a0, $zero, print_state_4
+	addi $a0, $a0, -1
+	beq $a0, $zero, print_state_all_red
+	#if somehow we're not in a valid state exit the program
+		j exit_program
 	
-	move $s0, $a0	#set $s0 to the light state argument so we can reuse argument register
-	
-	li $v0, 4
-	la $a0, temp_print_state	#print temporary state preamble
-	syscall
-	
-	move $a0, $s0
-	li $v0, 1			#print current state
-	syscall
-	
-	li $v0, 4
-	la $a0, new_line		#print new line
-	syscall
-	
-	beq $s0, $zero, check_ns_cw	#if current state is NS green state, then go to check NS crosswalk
-	
-	li $t0, 3	#is current state EW green state?
-	beq $s0, $t0, check_ew_cw	#if so, go to check EW crosswalk
-	j exit_print
-	
-	check_ns_cw:
-		andi $t0, $a1, 1
-		beq $t0, $zero, exit_print	#if NS crosswalk input bit is 0, exit
-		#if the NS bit is 1:
-		li $v0, 4
-		la $a0, cross_ns		#print that NS crosswalk active 
-		syscall
-		andi $a1, $a1, 2		#set NS bit to 0
-		j exit_print
+	#Essentially a switch case to print the states ascii art
+	print_state_0:
+		andi $t0, $a1, 1 		#Check if NS crosswalk bit is 0 or 1
+		bne $t0, $zero, print_state_0.1 	#If its not 0, the crosswalk is active
 		
-	check_ew_cw:
-		andi $t0, $a1, 2
-		beq $t0, $zero, exit_print	#if EW crosswalk input bit is 0, exit
-		#if the EW bit is 1:
+		#Print this state without crosswalk active
 		li $v0, 4
-		la $a0, cross_ew		#print that EW crosswalk active 
+		la $a0, state_0.0
 		syscall
-		andi $a1, $a1, 1		#set EW bit to 0
+		j exit_print_states
+		
+		#Print state with cross walk active
+		print_state_0.1:
+			li $v0, 4
+			la $a0, state_0.1
+			syscall
+			andi $a1, $a1, 2	#set NS bit to 0
+			j exit_print_states
+		
+	print_state_1:
+		li $v0, 4
+		la $a0, state_1.0
+		syscall
+		j exit_print_states
 	
-	exit_print:
-		move $v0, $a1 	#return (possibly modified) crosswalk input state
-		lw $s0, 0($sp)	#restore $s0
-		addi $sp, $sp, 4
-		jr $ra
+	print_state_3:
+		andi $t0, $a1, 2 		#Check if EW crosswalk bit is 0 or 1
+		bne $t0, $zero, print_state_3.1 	#If its not 0, the crosswalk is active
+		
+		#Print this state without crosswalk active
+		li $v0, 4
+		la $a0, state_3.0
+		syscall
+		j exit_print_states
+		
+		#Print state with cross walk active
+		print_state_3.1:
+			li $v0, 4
+			la $a0, state_3.1
+			syscall
+			andi $a1, $a1, 1	#set EW bit to 0
+			j exit_print_states
+	
+	print_state_4:
+		li $v0, 4
+		la $a0, state_4.0
+		syscall
+		j exit_print_states
+		
+	print_state_all_red:
+		li $v0, 4
+		la $a0, state_all_red
+		syscall
+	
+	exit_print_states:
+	move $v0, $a1	#return (possibly modified) crosswalk input state
+	jr $ra
+
+
+# ---------------------------Exit the program-------------------------------
+#[ARGS]: 	No arguments
+#[RETURN]: 	No return
+exit_program:
+	li $v0, 10
+	syscall
